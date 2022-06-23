@@ -2,7 +2,7 @@ import test from "ava";
 import { foo, bar } from "../index";
 
 test("foo()", (t) => {
-  t.is(foo(1, 2), 3);
+  t.is(foo(1, 2), 4);
 });
 
 test("bar()", (t) => {
