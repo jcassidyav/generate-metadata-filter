@@ -1,0 +1,7 @@
+{
+
+    "typeSources":{
+        "ios": ["a", "b", "c"],
+        "android": ["a", "b", "c"]
+    }
+}

@@ -16,6 +16,7 @@
   "module": "./build/esm/index.js",
   "types": "./build/index.d.ts",
   "license": "MIT",
+  "bin": "./build/cjs/index.js",
   "engines": {
     "node": "> 14"
   },
@@ -24,7 +25,7 @@
   },
   "scripts": {
     "setup": "node -r ./esbuild-hook ./scripts/setup",
-    "build": "npm run clean && npm run type-dts && npm run build-main",
+    "build": "npm run clean && npm run type-dts && npm run build-main && npm pack && npm i -g jcassidyav-generate-metadata-filter-0.0.1-alpha.tgz",
     "build-main": "node -r ./esbuild-hook ./scripts/build",
     "clean": "node -r ./esbuild-hook ./scripts/clean",
     "type-dts": "tsc --emitDeclarationOnly",
@@ -40,7 +41,10 @@
     "cz": "cz",
     "semantic-release": "semantic-release"
   },
+  
   "devDependencies": {
+    "@ryansonshine/commitizen": "^4.2.8",
+    "@ryansonshine/cz-conventional-changelog": "^3.3.4",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/commit-analyzer": "^9.0.2",
     "@semantic-release/github": "^8.0.4",
@@ -51,9 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "ava": "^4.3.0",
-    "@ryansonshine/commitizen": "^4.2.8",
     "cspell": "^6.1.2",
-    "@ryansonshine/cz-conventional-changelog": "^3.3.4",
     "esbuild": "^0.14.43",
     "eslint": "^8.17.0",
     "eslint-config-prettier": "^8.5.0",
@@ -74,5 +76,8 @@
   },
   "overrides": {
     "semver-regex": "3.1.4"
+  },
+  "dependencies": {
+    "ts-morph": "^15.1.0"
   }
 }
