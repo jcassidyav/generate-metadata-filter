@@ -23,8 +23,8 @@ Or click on `Use this template` button on GitHub!
 
 To enable deployment, you will need to:
 
-1. Setup `NPM_TOKEN` secret in GitHub actions ([Settings > Secrets > Actions](https://github.com/gjuchault/typescript-service-starter/settings/secrets/actions))
-2. Give `GITHUB_TOKEN` write permissions for GitHub releases ([Settings > Actions > General](https://github.com/gjuchault/typescript-service-starter/settings/actions) > Workflow permissions)
+1. Setup `NPM_TOKEN` secret in GitHub actions ([Settings > Secrets > Actions](https://github.com/jcassidyav/generate-metadata-filter/settings/secrets/actions))
+2. Give `GITHUB_TOKEN` write permissions for GitHub releases ([Settings > Actions > General](https://github.com/jcassidyav/generate-metadata-filter/settings/actions) > Workflow permissions)
 
 ## Features
 

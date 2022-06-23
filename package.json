@@ -10,7 +10,7 @@
   ],
   "homepage": "https://github.com/jcassidyav/generate-metadata-filter",
   "bugs": "https://github.com/jcassidyav/generate-metadata-filter/issues",
-  "author": "Gabriel Juchault <gabriel.juchault@gmail.com>",
+  "author": "Jason Cassidy",
   "repository": "jcassidyav/generate-metadata-filter",
   "main": "./build/cjs/index.js",
   "module": "./build/esm/index.js",
