@@ -1,11 +1,13 @@
+import path from "path";
+import { match } from "minimatch";
 import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol } from "ts-morph";
 import { IConfig } from "./config";
-import minimatch from "minimatch";
-import path from "path";
+
 export class Scanner {
     constructor(private config: IConfig) {}
     private identified = new Map<string, { kind: string; declared: string }>();
-
+    private log = false;
+    // eslint-disable-next-line @typescript-eslint/ban-types
     private logDetails(node: Node<ts.Node> | TypeNode<ts.TypeNode> | undefined, symbol: Symbol | undefined) {
         const checkParent = symbol?.getDeclarations()[0]?.getParent()?.getKindName();
 
@@ -13,7 +15,7 @@ export class Scanner {
         const kindName = symbol?.getDeclarations()[0].getKindName();
         const symbolName = symbol?.getFullyQualifiedName();
 
-        if (false) {
+        if (this.log) {
             console.log("Parent is:", checkParent);
 
             console.log("Symbol declared in:", filePath);
@@ -35,14 +37,13 @@ export class Scanner {
         return this.isTypeDefinitionAndroid(filePath) || this.isTypeDefinitionIOS(filePath);
     }
     isTypeDefinitionIOS(filePath: string): boolean {
-        return filePath?.includes("@nativescript\\types-ios") || !!this.config.typeSources?.ios?.find((pattern) => minimatch.match([filePath], pattern));
+        return filePath?.includes("@nativescript\\types-ios") || !!this.config.typeSources?.ios?.find((pattern) => match([filePath], pattern));
     }
     isTypeDefinitionAndroid(filePath: string): boolean {
         return (
             filePath?.includes("@nativescript\\types-android") ||
             !!this.config.typeSources?.android?.find((pattern) => {
-                const ans = minimatch.match([filePath], pattern);
-                return ans && ans.length > 0;
+                return match([filePath], pattern);
             })
         );
     }
@@ -65,7 +66,7 @@ export class Scanner {
                         const filePath = path.relative(this.getSanePath(process.cwd()), symbol?.getDeclarations()[0].getSourceFile().getFilePath());
                         //  console.log("*** PATH ***", tey, this.getSanePath(process.cwd()), filePath, symbol?.getDeclarations()[0].getSourceFile().getFilePath());
                         const kindName = symbol?.getDeclarations()[0].getKindName();
-                        const symbolName = symbol?.getFullyQualifiedName();
+                        //     const symbolName = symbol?.getFullyQualifiedName();
 
                         if (kindName === "ClassDeclaration" || kindName === "MethodDeclaration" || kindName === "PropertyDeclaration") {
                             if (this.isTypeDefinitionNative(filePath) && !node.getSourceFile().getFilePath().includes(".d.ts")) {
