@@ -1,7 +1,9 @@
+
 import test from "ava";
 import { ConfigX } from "../config";
 import { foo, bar } from "../index";
 
+;
 
 test("foo()", (t) => {
   t.is(foo(1, 2), 5);
@@ -12,6 +14,6 @@ test("bar()", (t) => {
 });
 
 test("config", (t) => {
-  t.is(ConfigX.readConfig().typeSources.android[0], "c");
+  t.is(ConfigX.readConfig().typeSources.android[0], "a");
   
 });

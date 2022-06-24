@@ -8,7 +8,7 @@
   "parserOptions": {
     "project": "./tsconfig.lint.json"
   },
-  "plugins": ["import", "@typescript-eslint"],
+  "plugins": ["import", "@typescript-eslint", "prettier"],
   "ignorePatterns": ["scripts/*", "ava.config.mjs", "esbuild-hook.js"],
   "extends": [
     "eslint:recommended",
@@ -16,7 +16,7 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript",
-    "prettier"
+    "plugin:prettier/recommended"
   ],
   "settings": {
     "import/resolver": {

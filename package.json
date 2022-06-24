@@ -26,6 +26,8 @@
   "scripts": {
     "setup": "node -r ./esbuild-hook ./scripts/setup",
     "build": "npm run clean && npm run type-dts && npm run build-main && npm pack && npm i -g jcassidyav-generate-metadata-filter-0.0.1-alpha.tgz",
+    "build-mainx": "esbuild  --sourcemap --format=cjs --platform=node --outdir=dist ./src/index.ts",
+    
     "build-main": "node -r ./esbuild-hook ./scripts/build",
     "clean": "node -r ./esbuild-hook ./scripts/clean",
     "type-dts": "tsc --emitDeclarationOnly",
@@ -34,7 +36,7 @@
     "format-check": "prettier \"src/**/*.ts\" --check",
     "lint": "eslint src --ext .ts --fix",
     "lint-check": "eslint src --ext .ts",
-    "test": "ava",
+    "test": "ava --no-worker-threads",
     "test-coverage": "nyc ava && nyc report --reporter=html",
     "test-setup": "node -r ./esbuild-hook ./scripts/testSetup",
     "spell-check": "cspell \"{README.md,CODE_OF_CONDUCT.md,CONTRIBUTING.md,.github/*.md,src/**/*.ts}\"",
@@ -68,7 +70,8 @@
     "semantic-release": "^19.0.3",
     "slugify": "^1.6.5",
     "source-map-support": "^0.5.21",
-    "typescript": "^4.7.3"
+    "typescript": "^4.7.3",
+    "@types/minimatch": "^3.0.3"
   },
   "volta": {
     "node": "16.15.1",
@@ -78,6 +81,7 @@
     "semver-regex": "3.1.4"
   },
   "dependencies": {
-    "ts-morph": "^15.1.0"
+    "ts-morph": "^15.1.0",
+    "minimatch": "5.1.0"
   }
 }
