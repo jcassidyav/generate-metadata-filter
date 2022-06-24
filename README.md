@@ -3,7 +3,7 @@ Examines the typescript code of Nativescript Project/Plugin, outputting the type
 ## Installation
 
 ```
-npm i -g @jcassidyav/generate-metadata-filter
+npm i -g @jcassidyav/generate-metadata-filter@alpha
 ```
 
 ## Usage
