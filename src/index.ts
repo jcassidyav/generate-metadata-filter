@@ -10,7 +10,11 @@ export function bar(a: number, b: number): number {
     return a - b;
 }
 
-console.log("Hello1");
+console.log("Scanning Typescript for Native Types");
 const config = ConfigX.readConfig();
 const compile = new Scanner(config);
-compile.doScan();
+const scanResult = compile.doScan();
+console.log("*********** Identified *************");
+scanResult.forEach((value, key) => {
+    console.log(key, JSON.stringify(value));
+});
