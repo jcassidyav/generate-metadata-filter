@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-types */
 import path from "path";
 import { match } from "minimatch";
 import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration } from "ts-morph";
@@ -105,9 +104,9 @@ export class Scanner {
 
     processDeclarationNodeSymbol(typeSymbol: Symbol | undefined, node: TypeNode<ts.TypeNode> | undefined | Node<ts.Node>): DeclarationInfo | undefined {
         if (typeSymbol && node) {
-            const declInforeturn = this.getDeclarationsInfo(typeSymbol, "node.getSourceFile().getFilePath()");
-            if (declInforeturn.isInteresting) {
-                return declInforeturn;
+            const declInfo = this.getDeclarationsInfo(typeSymbol, "node.getSourceFile().getFilePath()");
+            if (declInfo.isInteresting) {
+                return declInfo;
             }
         }
     }

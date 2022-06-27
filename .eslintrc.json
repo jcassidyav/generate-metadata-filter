@@ -35,5 +35,6 @@
         }
       }
     ]
+    ,"@typescript-eslint/ban-types": "off" 
   }
 }
