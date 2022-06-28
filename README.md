@@ -17,7 +17,8 @@ npm i -g @jcassidyav/generate-metadata-filter@alpha
         "typeSources":{
             "ios": [],
             "android": ["ns-typings/android/*"]
-        }
+        },
+        "mode":"plugin"
     }
     ```
 

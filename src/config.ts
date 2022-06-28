@@ -12,9 +12,10 @@ export class ConfigX {
 }
 
 export interface IConfig {
-    typeSources: {
-        ios: Array<string>;
-        android: Array<string>;
+    typeSources?: {
+        ios?: Array<string>;
+        android?: Array<string>;
     };
-    mode: "app" | "plugin";
+    mode?: "app" | "plugin";
+    output?: string;
 }

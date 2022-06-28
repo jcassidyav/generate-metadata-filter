@@ -1,12 +1,13 @@
 import path from "path";
 import { match } from "minimatch";
-import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration } from "ts-morph";
+import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific } from "ts-morph";
 import { IConfig } from "./config";
 
 export class Scanner {
     constructor(private config: IConfig) {}
-    private identified = new Map<string, SymbolInfo>();
+
     private log = false;
+    private identified = new ScanResults();
 
     private logDetails(node: Node<ts.Node> | TypeNode<ts.TypeNode> | undefined, symbol: Symbol | undefined, declaration: DeclarationInfo, parent?: DeclarationInfo) {
         const checkParent = symbol?.getDeclarations()[0]?.getParent()?.getKindName();
@@ -59,7 +60,7 @@ export class Scanner {
 
         return false;
     }
-    doScan(): Map<string, SymbolInfo> {
+    doScan(): ScanResults {
         const project = new Project({
             tsConfigFilePath: "./tsconfig.json"
         });
@@ -81,17 +82,25 @@ export class Scanner {
                             this.logDetails(node, symbol, declInfo);
 
                             if (declInfo.kindName === "MethodDeclaration") {
+                                for (const methodDeclarationNode of symbol.getDeclarations()) {
+                                    //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
+                                    const methodDeclaration: MethodDeclaration = methodDeclarationNode as MethodDeclaration;
+                                    const returnTypeSymbol = methodDeclaration.getReturnType().getSymbol();
+                                    const returnSymbolNode = methodDeclaration.getReturnTypeNode();
+                                    const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
+                                    if (returnDecl?.isInteresting) {
+                                        this.logDetails(returnSymbolNode, returnTypeSymbol, returnDecl);
+                                    }
+                                    // get param type
+                                    //    console.log("******   Parameters ************")
+                                    methodDeclaration.getParameters().forEach((value) => {
+                                        const paramDecl = this.processDeclarationNodeSymbol(value.getType().getSymbol(), value.getTypeNode());
+                                        if (paramDecl?.isInteresting) {
+                                            this.logDetails(value.getTypeNode(), value.getType().getSymbol(), paramDecl);
+                                        }
+                                    });
+                                }
                                 // get return type
-                                const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
-                                const returnTypeSymbol = methodDeclaration.getReturnType().getSymbol();
-                                const returnSymbolNode = methodDeclaration.getReturnTypeNode();
-                                this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
-
-                                // get param type
-                                //    console.log("******   Parameters ************")
-                                methodDeclaration.getParameters().forEach((value) => {
-                                    this.processDeclarationNodeSymbol(value.getType().getSymbol(), value.getTypeNode());
-                                });
                             }
                         }
                     }
@@ -117,7 +126,12 @@ export class Scanner {
         for (const ancestor of ancestors) {
             const ancestorKind = ancestor.getKindName();
             if (ancestorKind === "ClassDeclaration") {
-                interestingAncestors.push({ fullName: ancestor.getSymbol()?.getName() as string, isInteresting: true, kindName: ancestor.getKindName() });
+                interestingAncestors.push({
+                    fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
+                    name: ancestor.getSymbol()?.getName() as string,
+                    isInteresting: true,
+                    kindName: ancestor.getKindName()
+                });
             } else if (ancestorKind === "ModuleDeclaration") {
                 const result = ancestor
                     .getFirstAncestorByKind(ts.SyntaxKind.ModuleDeclaration)
@@ -125,11 +139,21 @@ export class Scanner {
                     .find((node) => node.isKind(ts.SyntaxKind.ClassDeclaration) && node.getName() === (ancestor as ModuleDeclaration).getName());
                 if (result) {
                     // console.log("Found a class for ", (ancestor as ModuleDeclaration).getName(), "So it is probably a class.");
-                    interestingAncestors.push({ fullName: ancestor.getSymbol()?.getName() as string, isInteresting: true, kindName: "ClassDeclaration" });
+                    interestingAncestors.push({
+                        name: ancestor.getSymbol()?.getName() as string,
+                        fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
+                        isInteresting: true,
+                        kindName: "ClassDeclaration"
+                    });
                     continue;
                 }
 
-                interestingAncestors.push({ fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string, isInteresting: true, kindName: ancestor.getKindName() });
+                interestingAncestors.push({
+                    name: ancestor.getSymbol()?.getName() as string,
+                    fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
+                    isInteresting: true,
+                    kindName: ancestor.getKindName()
+                });
                 break;
             }
         }
@@ -142,12 +166,14 @@ export class Scanner {
 
         //  console.log("*** PATH ***", tey, this.getSanePath(process.cwd()), filePath, symbol?.getDeclarations()[0].getSourceFile().getFilePath());
         const kindName = declaration.getKindName();
+
         if (anyKind || kindName === "ClassDeclaration" || kindName === "MethodDeclaration" || kindName === "PropertyDeclaration") {
             const typeDefinition = this.isTypeDefinitionNative(filePath);
             if (typeDefinition.isNative) {
                 const ancestors = this.walkToGetNamespaceClass(declaration);
 
                 return {
+                    name: (declaration as unknown as NameableNodeSpecific).getName() as string,
                     fullName: symbolFullName,
                     typeClassification: typeDefinition,
                     kindName,
@@ -157,14 +183,13 @@ export class Scanner {
                 };
             }
         }
-        return { fullName: symbolFullName, isInteresting: false };
+        return { name: "", fullName: symbolFullName, isInteresting: false };
     }
 
     getDeclarationsInfo(symbol: Symbol, sourceNodeFilePath: string): DeclarationInfo {
         const symbolFullName = symbol.getFullyQualifiedName();
         if (!sourceNodeFilePath.includes(".d.ts")) {
-            for (let i = 0; i < symbol.getDeclarations().length; ++i) {
-                const declaration = symbol.getDeclarations()[i];
+            for (const declaration of symbol.getDeclarations()) {
                 const info = this.getDeclarationInfo(declaration, symbolFullName);
                 if (info.isInteresting) {
                     //    console.log("************" + i + " DEAL WITH MULTIPLE DECLARATIONS ******************", info.isInteresting, symbol.getFullyQualifiedName());
@@ -172,27 +197,41 @@ export class Scanner {
                 }
             }
         }
-        return { fullName: symbolFullName, isInteresting: false };
+        return { name: "", fullName: symbolFullName, isInteresting: false };
     }
 }
 
-interface NativeTypeClassification {
+export interface NativeTypeClassification {
     isNative: boolean;
     isIOS?: boolean;
     isAndroid?: boolean;
 }
 
-interface DeclarationInfo {
+export interface DeclarationInfo {
     typeClassification?: NativeTypeClassification;
     filePath?: string;
     kindName?: string;
     isInteresting: boolean;
     fullName: string;
+    name: string;
     ancestors?: Array<DeclarationInfo>;
 }
 
-interface SymbolInfo {
+export interface SymbolInfo {
     name: string;
     declaration: DeclarationInfo;
     parent?: DeclarationInfo;
+}
+
+export class ScanResults {
+    public ios: Map<string, SymbolInfo> = new Map<string, SymbolInfo>();
+    public android: Map<string, SymbolInfo> = new Map<string, SymbolInfo>();
+
+    public set(name: string, symbolInfo: SymbolInfo) {
+        if (symbolInfo.declaration.typeClassification?.isAndroid) {
+            this.android.set(name, symbolInfo);
+        } else if (symbolInfo.declaration.typeClassification?.isIOS) {
+            this.ios.set(name, symbolInfo);
+        }
+    }
 }
