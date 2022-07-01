@@ -14,7 +14,7 @@ export class Scanner {
 
         const filePath = symbol?.getDeclarations()[0].getSourceFile().getFilePath();
         const kindName = symbol?.getDeclarations()[0].getKindName();
-        const symbolName = symbol?.getFullyQualifiedName();
+        let symbolName = symbol?.getFullyQualifiedName();
 
         if (this.log) {
             console.log("Parent is:", checkParent);
@@ -28,6 +28,10 @@ export class Scanner {
         }
         if (symbol) {
             if (kindName === "ClassDeclaration" || kindName === "MethodDeclaration" || kindName === "PropertyDeclaration") {
+                if (declaration.fullName == declaration.name && declaration.ancestors?.length) {
+                    symbolName = declaration.name + declaration.ancestors[0].fullName;
+                }
+
                 this.identified.set(symbolName as string, { name: symbol?.getName(), declaration, parent });
             }
         }
@@ -76,31 +80,32 @@ export class Scanner {
                 if (symbol) {
                     const decl = symbol?.getDeclarations();
                     if (decl && decl.length > 0) {
-                        const declInfo = this.getDeclarationsInfo(symbol, node.getSourceFile().getFilePath());
+                        const declInfos = this.getInterestingDeclarationsInfo(symbol, node.getSourceFile().getFilePath());
+                        for (const declInfo of declInfos) {
+                            if (declInfo.isInteresting) {
+                                this.logDetails(node, symbol, declInfo);
 
-                        if (declInfo.isInteresting) {
-                            this.logDetails(node, symbol, declInfo);
-
-                            if (declInfo.kindName === "MethodDeclaration") {
-                                for (const methodDeclarationNode of symbol.getDeclarations()) {
-                                    //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
-                                    const methodDeclaration: MethodDeclaration = methodDeclarationNode as MethodDeclaration;
-                                    const returnTypeSymbol = methodDeclaration.getReturnType().getSymbol();
-                                    const returnSymbolNode = methodDeclaration.getReturnTypeNode();
-                                    const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
-                                    if (returnDecl?.isInteresting) {
-                                        this.logDetails(returnSymbolNode, returnTypeSymbol, returnDecl);
-                                    }
-                                    // get param type
-                                    //    console.log("******   Parameters ************")
-                                    methodDeclaration.getParameters().forEach((value) => {
-                                        const paramDecl = this.processDeclarationNodeSymbol(value.getType().getSymbol(), value.getTypeNode());
-                                        if (paramDecl?.isInteresting) {
-                                            this.logDetails(value.getTypeNode(), value.getType().getSymbol(), paramDecl);
+                                if (declInfo.kindName === "MethodDeclaration") {
+                                    for (const methodDeclarationNode of symbol.getDeclarations()) {
+                                        //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
+                                        const methodDeclaration: MethodDeclaration = methodDeclarationNode as MethodDeclaration;
+                                        const returnTypeSymbol = methodDeclaration.getReturnType().getSymbol();
+                                        const returnSymbolNode = methodDeclaration.getReturnTypeNode();
+                                        const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
+                                        if (returnDecl?.isInteresting) {
+                                            this.logDetails(returnSymbolNode, returnTypeSymbol, returnDecl);
                                         }
-                                    });
+                                        // get param type
+                                        //    console.log("******   Parameters ************")
+                                        methodDeclaration.getParameters().forEach((value) => {
+                                            const paramDecl = this.processDeclarationNodeSymbol(value.getType().getSymbol(), value.getTypeNode());
+                                            if (paramDecl?.isInteresting) {
+                                                this.logDetails(value.getTypeNode(), value.getType().getSymbol(), paramDecl);
+                                            }
+                                        });
+                                    }
+                                    // get return type
                                 }
-                                // get return type
                             }
                         }
                     }
@@ -184,6 +189,21 @@ export class Scanner {
             }
         }
         return { name: "", fullName: symbolFullName, isInteresting: false };
+    }
+
+    getInterestingDeclarationsInfo(symbol: Symbol, sourceNodeFilePath: string): DeclarationInfo[] {
+        const interesting: DeclarationInfo[] = [];
+        const symbolFullName = symbol.getFullyQualifiedName();
+        if (!sourceNodeFilePath.includes(".d.ts")) {
+            for (const declaration of symbol.getDeclarations()) {
+                const info = this.getDeclarationInfo(declaration, symbolFullName);
+                if (info.isInteresting) {
+                    //    console.log("************" + i + " DEAL WITH MULTIPLE DECLARATIONS ******************", info.isInteresting, symbol.getFullyQualifiedName());
+                    interesting.push(info);
+                }
+            }
+        }
+        return interesting;
     }
 
     getDeclarationsInfo(symbol: Symbol, sourceNodeFilePath: string): DeclarationInfo {
