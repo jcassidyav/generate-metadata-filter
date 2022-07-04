@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import path from "path";
+import { ts } from "ts-morph";
 import { DeclarationInfo, SymbolInfo } from "./compile";
 import { IConfig } from "./config";
 
@@ -15,7 +16,7 @@ export class AndroidGenerator {
             console.log(entry[0]);
             const info = entry[1];
             console.log("name", info.name, "kind", info.declaration.kindName);
-            if (info.declaration.kindName === "ClassDeclaration") {
+            if (info.declaration.kind === ts.SyntaxKind.ClassDeclaration) {
                 right = info.name;
                 if (info.declaration.ancestors) {
                     const ancestorInfo = this.considerAncestorRules(info.declaration.ancestors);
@@ -25,9 +26,9 @@ export class AndroidGenerator {
                     this.result.push({ left, right });
                     // this.addAncestorRules(info.declaration.ancestors);
                 }
-            } else if (info.declaration.kindName === "PropertyDeclaration") {
+            } else if (info.declaration.kind === ts.SyntaxKind.PropertyDeclaration) {
                 // It seems that the params/return types are enough to operate on ( actually my still have a gap here as the return type of the property is not considered.)
-            } else if (info.declaration.kindName === "MethodDeclaration") {
+            } else if (info.declaration.kind === ts.SyntaxKind.MethodDeclaration) {
                 // It seems that the params/return types are enough to operate on
             }
         }

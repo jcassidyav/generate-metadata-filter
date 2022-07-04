@@ -1,6 +1,6 @@
 import path from "path";
 import { match } from "minimatch";
-import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific } from "ts-morph";
+import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific, PropertyDeclaration } from "ts-morph";
 import { IConfig } from "./config";
 
 export class Scanner {
@@ -13,7 +13,8 @@ export class Scanner {
         const checkParent = symbol?.getDeclarations()[0]?.getParent()?.getKindName();
 
         const filePath = symbol?.getDeclarations()[0].getSourceFile().getFilePath();
-        const kindName = symbol?.getDeclarations()[0].getKindName();
+        const kind = symbol?.getDeclarations()[0].getKind();
+
         let symbolName = symbol?.getFullyQualifiedName();
 
         if (this.log) {
@@ -27,7 +28,7 @@ export class Scanner {
             console.log("node Type 2", symbol?.getDeclarations()[0].getKindName());
         }
         if (symbol) {
-            if (kindName === "ClassDeclaration" || kindName === "MethodDeclaration" || kindName === "PropertyDeclaration") {
+            if (kind === ts.SyntaxKind.ClassDeclaration || kind === ts.SyntaxKind.MethodDeclaration || kind === ts.SyntaxKind.PropertyDeclaration) {
                 if (declaration.fullName == declaration.name && declaration.ancestors?.length) {
                     symbolName = declaration.name + declaration.ancestors[0].fullName;
                 }
@@ -85,7 +86,7 @@ export class Scanner {
                             if (declInfo.isInteresting) {
                                 this.logDetails(node, symbol, declInfo);
 
-                                if (declInfo.kindName === "MethodDeclaration") {
+                                if (declInfo.kind === ts.SyntaxKind.MethodDeclaration) {
                                     for (const methodDeclarationNode of symbol.getDeclarations()) {
                                         //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
                                         const methodDeclaration: MethodDeclaration = methodDeclarationNode as MethodDeclaration;
@@ -105,6 +106,18 @@ export class Scanner {
                                         });
                                     }
                                     // get return type
+                                } else if (declInfo.kind === ts.SyntaxKind.PropertyDeclaration) {
+                                    for (const propertyDeclarationNode of symbol.getDeclarations()) {
+                                        const propertyDeclaration: PropertyDeclaration = propertyDeclarationNode as PropertyDeclaration;
+                                        if (propertyDeclaration) {
+                                            const returnTypeSymbol = propertyDeclaration.getType().getSymbol();
+                                            const returnSymbolNode = propertyDeclaration.getTypeNode();
+                                            const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
+                                            if (returnDecl?.isInteresting) {
+                                                this.logDetails(returnSymbolNode, returnTypeSymbol, returnDecl);
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -129,15 +142,16 @@ export class Scanner {
         const interestingAncestors: Array<DeclarationInfo> = [];
         const ancestors = declaration.getAncestors();
         for (const ancestor of ancestors) {
-            const ancestorKind = ancestor.getKindName();
-            if (ancestorKind === "ClassDeclaration") {
+            const ancestorKind = ancestor.getKind();
+            if (ancestorKind === ts.SyntaxKind.ClassDeclaration) {
                 interestingAncestors.push({
                     fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
                     name: ancestor.getSymbol()?.getName() as string,
                     isInteresting: true,
-                    kindName: ancestor.getKindName()
+                    kindName: ancestor.getKindName(),
+                    kind: ancestorKind
                 });
-            } else if (ancestorKind === "ModuleDeclaration") {
+            } else if (ancestorKind === ts.SyntaxKind.ModuleDeclaration) {
                 const result = ancestor
                     .getFirstAncestorByKind(ts.SyntaxKind.ModuleDeclaration)
                     ?.getDescendants()
@@ -148,7 +162,8 @@ export class Scanner {
                         name: ancestor.getSymbol()?.getName() as string,
                         fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
                         isInteresting: true,
-                        kindName: "ClassDeclaration"
+                        kindName: "ClassDeclaration",
+                        kind: ts.SyntaxKind.ClassDeclaration
                     });
                     continue;
                 }
@@ -157,7 +172,8 @@ export class Scanner {
                     name: ancestor.getSymbol()?.getName() as string,
                     fullName: ancestor.getSymbol()?.getFullyQualifiedName() as string,
                     isInteresting: true,
-                    kindName: ancestor.getKindName()
+                    kindName: ancestor.getKindName(),
+                    kind: ancestor.getKind()
                 });
                 break;
             }
@@ -170,9 +186,9 @@ export class Scanner {
         const filePath = this.getSanePath(path.relative(this.getSanePath(process.cwd()), declaration.getSourceFile().getFilePath()));
 
         //  console.log("*** PATH ***", tey, this.getSanePath(process.cwd()), filePath, symbol?.getDeclarations()[0].getSourceFile().getFilePath());
-        const kindName = declaration.getKindName();
+        const kind = declaration.getKind();
 
-        if (anyKind || kindName === "ClassDeclaration" || kindName === "MethodDeclaration" || kindName === "PropertyDeclaration") {
+        if (anyKind || kind === ts.SyntaxKind.ClassDeclaration || kind === ts.SyntaxKind.MethodDeclaration || kind === ts.SyntaxKind.PropertyDeclaration) {
             const typeDefinition = this.isTypeDefinitionNative(filePath);
             if (typeDefinition.isNative) {
                 const ancestors = this.walkToGetNamespaceClass(declaration);
@@ -181,14 +197,15 @@ export class Scanner {
                     name: (declaration as unknown as NameableNodeSpecific).getName() as string,
                     fullName: symbolFullName,
                     typeClassification: typeDefinition,
-                    kindName,
+                    kindName: declaration.getKindName(),
                     filePath,
                     isInteresting: true,
-                    ancestors
+                    ancestors,
+                    kind: declaration.getKind()
                 };
             }
         }
-        return { name: "", fullName: symbolFullName, isInteresting: false };
+        return { name: "", fullName: symbolFullName, isInteresting: false, kind: declaration.getKind() };
     }
 
     getInterestingDeclarationsInfo(symbol: Symbol, sourceNodeFilePath: string): DeclarationInfo[] {
@@ -217,7 +234,7 @@ export class Scanner {
                 }
             }
         }
-        return { name: "", fullName: symbolFullName, isInteresting: false };
+        return { name: "", fullName: symbolFullName, isInteresting: false, kind: ts.SyntaxKind.Unknown };
     }
 }
 
@@ -231,6 +248,7 @@ export interface DeclarationInfo {
     typeClassification?: NativeTypeClassification;
     filePath?: string;
     kindName?: string;
+    kind: ts.SyntaxKind;
     isInteresting: boolean;
     fullName: string;
     name: string;
