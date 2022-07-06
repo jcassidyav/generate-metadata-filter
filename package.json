@@ -24,7 +24,7 @@
     "access": "public"
   },
   "scripts": {
-    "setup": "node -r ./esbuild-hook ./scripts/setup",
+   
     "build": "npm run clean && npm run type-dts && npm run build-main",
     "build-mainx": "esbuild  --sourcemap --format=cjs --platform=node --outdir=dist ./src/index.ts",
     "pack": "npm pack && npm i -g jcassidyav-generate-metadata-filter-0.0.1-alpha.tgz",
