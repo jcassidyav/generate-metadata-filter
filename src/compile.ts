@@ -1,6 +1,6 @@
 import path from "path";
 import { match } from "minimatch";
-import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific, PropertyDeclaration } from "ts-morph";
+import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific, PropertyDeclaration, ClassDeclaration, ExpressionWithTypeArguments } from "ts-morph";
 import { IConfig } from "./config";
 
 export class Scanner {
@@ -86,6 +86,26 @@ export class Scanner {
                             if (declInfo.isInteresting) {
                                 this.logDetails(node, symbol, declInfo);
 
+                                // if this is a class then get the interfaces/classes it extends/implements ?
+                                if (declInfo.kind === ts.SyntaxKind.ClassDeclaration) {
+                                    for (const classDeclarationNode of symbol.getDeclarations()) {
+                                        if (classDeclarationNode.getKind() == ts.SyntaxKind.ClassDeclaration) {
+                                            const classDeclaration: ClassDeclaration = classDeclarationNode as ClassDeclaration;
+                                            const extendedTypes: ExpressionWithTypeArguments[] = [];
+
+                                            const classExtended = classDeclaration.getExtends();
+                                            if (classExtended) {
+                                                extendedTypes.push(classExtended);
+                                            }
+                                            const interfaces = classDeclaration.getImplements();
+                                            if (interfaces && interfaces.length > 0) {
+                                                extendedTypes.push(...interfaces);
+                                            }
+                                            this.processExtended(extendedTypes);
+                                        }
+                                    }
+                                }
+
                                 if (declInfo.kind === ts.SyntaxKind.MethodDeclaration) {
                                     for (const methodDeclarationNode of symbol.getDeclarations()) {
                                         //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
@@ -127,6 +147,25 @@ export class Scanner {
         });
 
         return this.identified;
+    }
+    processExtended(extendedTypes: ExpressionWithTypeArguments[]) {
+        if (extendedTypes && extendedTypes.length > 0) {
+            for (const extendedType of extendedTypes) {
+                const typeSymbol = extendedType.getType().getSymbol();
+
+                const returnDecl = this.processDeclarationNodeSymbol(typeSymbol, extendedType);
+                if (returnDecl?.isInteresting) {
+                    this.logDetails(extendedType, typeSymbol, returnDecl);
+                }
+                const typeArgs = extendedType.getTypeArguments();
+                for (const typeArg of typeArgs) {
+                    const returnDecl = this.processDeclarationNodeSymbol(typeArg.getSymbol(), typeArg);
+                    if (returnDecl?.isInteresting) {
+                        this.logDetails(typeArg, typeArg.getSymbol(), returnDecl);
+                    }
+                }
+            }
+        }
     }
 
     processDeclarationNodeSymbol(typeSymbol: Symbol | undefined, node: TypeNode<ts.TypeNode> | undefined | Node<ts.Node>): DeclarationInfo | undefined {
