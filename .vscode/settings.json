@@ -4,5 +4,19 @@
   "cSpell.enabled": true,
   "editor.formatOnSave": true,
   "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
+  "eslint.codeAction.showDocumentation": {
+    "enable": true
+},
+"eslint.validate": [
+    "typescript",
+    "javascript"
+],
+"eslint.format.enable": true,
+"eslint.lintTask.enable": true,
+"eslint.lintTask.options": "--ext=ts src",
+"editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true
+}
 }

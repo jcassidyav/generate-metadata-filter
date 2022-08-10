@@ -1,0 +1,10 @@
+{
+
+    "typeSources":{
+        "ios": ["a", "b", "c"],
+        "android": ["a", "b", "c"]
+    },
+
+    "mode": "plugin",
+    "output": "./metadata"
+}
