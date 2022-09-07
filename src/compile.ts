@@ -28,7 +28,13 @@ export class Scanner {
             console.log("node Type 2", symbol?.getDeclarations()[0].getKindName());
         }
         if (symbol) {
-            if (kind === ts.SyntaxKind.ClassDeclaration || kind === ts.SyntaxKind.MethodDeclaration || kind === ts.SyntaxKind.PropertyDeclaration) {
+            if (
+                kind === ts.SyntaxKind.InterfaceDeclaration ||
+                kind === ts.SyntaxKind.EnumDeclaration ||
+                kind === ts.SyntaxKind.ClassDeclaration ||
+                kind === ts.SyntaxKind.MethodDeclaration ||
+                kind === ts.SyntaxKind.PropertyDeclaration
+            ) {
                 if (declaration.fullName == declaration.name && declaration.ancestors?.length) {
                     symbolName = declaration.name + declaration.ancestors[0].fullName;
                 }
@@ -72,10 +78,6 @@ export class Scanner {
 
         project.getSourceFiles().forEach((sourceFile) => {
             sourceFile.getDescendants().forEach((node: Node<ts.Node>) => {
-                if (node.getText() == "packageId") {
-                    console.log("Location package", node.getSourceFile().getFilePath());
-                }
-
                 const symbol = node.getSymbol();
 
                 if (symbol) {
@@ -227,7 +229,15 @@ export class Scanner {
         //  console.log("*** PATH ***", tey, this.getSanePath(process.cwd()), filePath, symbol?.getDeclarations()[0].getSourceFile().getFilePath());
         const kind = declaration.getKind();
 
-        if (anyKind || kind === ts.SyntaxKind.ClassDeclaration || kind === ts.SyntaxKind.MethodDeclaration || kind === ts.SyntaxKind.PropertyDeclaration) {
+        if (
+            anyKind ||
+            kind === ts.SyntaxKind.ClassDeclaration ||
+            kind === ts.SyntaxKind.MethodDeclaration ||
+            kind === ts.SyntaxKind.PropertyDeclaration ||
+            kind === ts.SyntaxKind.InterfaceDeclaration ||
+            kind === ts.SyntaxKind.TypeAliasDeclaration ||
+            kind === ts.SyntaxKind.EnumDeclaration
+        ) {
             const typeDefinition = this.isTypeDefinitionNative(filePath);
             if (typeDefinition.isNative) {
                 const ancestors = this.walkToGetNamespaceClass(declaration);

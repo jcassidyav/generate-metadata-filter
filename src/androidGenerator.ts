@@ -16,7 +16,7 @@ export class AndroidGenerator {
             console.log(entry[0]);
             const info = entry[1];
             console.log("name", info.name, "kind", info.declaration.kindName);
-            if (info.declaration.kind === ts.SyntaxKind.ClassDeclaration) {
+            if (info.declaration.kind === ts.SyntaxKind.ClassDeclaration || info.declaration.kind === ts.SyntaxKind.EnumDeclaration || info.declaration.kind === ts.SyntaxKind.InterfaceDeclaration) {
                 right = info.name;
                 if (info.declaration.ancestors) {
                     const ancestorInfo = this.considerAncestorRules(info.declaration.ancestors);
