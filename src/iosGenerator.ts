@@ -4,7 +4,7 @@ import { ts } from "ts-morph";
 import { DeclarationInfo, SymbolInfo } from "./compile";
 import { IConfig } from "./config";
 
-export class AndroidGenerator {
+export class IOSGenerator {
     constructor(private config: IConfig) { }
     private result = new Array<Rule>();
     generate(scanResult: Map<string, SymbolInfo>) {
@@ -37,7 +37,7 @@ export class AndroidGenerator {
         this.result.forEach((r) => console.log("left", r.left, "right", r.right));
         // add to correct template
         const outputResult = this.populateTemplate();
-        const outPath = this.config.output ?? "platforms/android";
+        const outPath = this.config.output ?? "platforms/ios";
         if (this.config.output) fs.mkdirSync(this.config.output, { recursive: true });
         fs.writeFileSync(path.join(outPath, "native-api-usage.json"), JSON.stringify(outputResult, null, 5));
         // write to location

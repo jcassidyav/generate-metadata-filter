@@ -2,6 +2,7 @@
 import { AndroidGenerator } from "./androidGenerator";
 import { Scanner } from "./compile";
 import { ConfigX } from "./config";
+import { IOSGenerator } from "./iosGenerator";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const version = require("../package.json").version;
 export function foo(a: number, b: number): number {
@@ -26,3 +27,8 @@ scanResult.android.forEach((value, key) => {
 });
 const generator = new AndroidGenerator(config);
 generator.generate(scanResult.android);
+
+const iosGenerator = new IOSGenerator(config);
+generator.generate(scanResult.ios);
+
+
