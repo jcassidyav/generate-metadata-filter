@@ -1,9 +1,13 @@
 Examines the typescript code of Nativescript Project/Plugin, outputting the types determined to be Native types.
 
+## POC
+
+Currently only works with android
+
 ## Installation
 
 ```
-npm i -g @jcassidyav/generate-metadata-filter@alpha
+npm i -g @jcassidyav/generate-metadata-filter
 ```
 
 ## Usage
