@@ -73,7 +73,7 @@ export class Scanner {
     }
     doScan(): ScanResults {
         const project = new Project({
-            tsConfigFilePath: "./tsconfig.json"
+            tsConfigFilePath: this.config.tsconfig ?? "./tsconfig.json"
         });
 
         project.getSourceFiles().forEach((sourceFile) => {

@@ -18,4 +18,5 @@ export interface IConfig {
     };
     mode?: "app" | "plugin";
     output?: string;
+    tsconfig?: string;
 }
