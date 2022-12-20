@@ -55,22 +55,26 @@ export class Scanner {
         return { isNative: false };
     }
     isTypeDefinitionIOS(filePath: string): boolean {
-        return filePath?.includes("@nativescript/types-ios") || !!this.config.typeSources?.ios?.find((pattern) => match([filePath], pattern));
+        return filePath?.includes("@nativescript/types-ios") || this.filesMatchPatterns(filePath, this.config.typeSources?.ios); //!!this.config.typeSources?.ios?.find((pattern) => match([filePath], pattern));
     }
     isTypeDefinitionAndroid(filePath: string): boolean {
         if (filePath?.includes("@nativescript/types-android")) {
             return true;
         }
 
-        if (this.config.typeSources?.android) {
-            for (let i = 0; i < this.config.typeSources?.android.length; ++i) {
-                const isMatch = match([filePath], this.config.typeSources.android[0]);
+        return this.filesMatchPatterns(filePath, this.config.typeSources?.android);
+    }
+
+    filesMatchPatterns(filePath: string, typeSources?: string[]): boolean {
+        if (typeSources) {
+            for (let i = 0; i < typeSources.length; ++i) {
+                const isMatch = match([filePath], typeSources[0]);
                 if (isMatch.length > 0) return true;
             }
         }
-
         return false;
     }
+
     doScan(): ScanResults {
         const project = new Project({
             tsConfigFilePath: this.config.tsconfig ?? "./tsconfig.json"

@@ -13,9 +13,11 @@ console.log("*********** Identified IOS*************");
 scanResult.ios.forEach((value, key) => {
     console.log(key, JSON.stringify(value));
 });
+console.log("*********** END Identified IOS *************");
 console.log("*********** Identified Android *************");
 scanResult.android.forEach((value, key) => {
     console.log(key, JSON.stringify(value));
 });
+console.log("*********** END Identified Android *************");
 const generator = new AndroidGenerator(config);
 generator.generate(scanResult.android);
