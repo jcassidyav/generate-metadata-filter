@@ -61,9 +61,9 @@ export class IOSGenerator {
 
             const fileName = path.basename(filePath);
             console.log("file Name:", fileName);
-            const namecomponents = fileName.split("!");
-            if (namecomponents[0] === "objc") {
-                const fileParts = namecomponents[1].split(".");
+            const nameComponents = fileName.split("!");
+            if (nameComponents[0] === "objc") {
+                const fileParts = nameComponents[1].split(".");
                 console.log("Module Name:", fileParts[0]);
                 return fileParts[0];
             }

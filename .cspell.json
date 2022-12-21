@@ -1,7 +1,16 @@
 {
   "version": "0.1",
   "language": "en",
-  "words": ["esbuild", "rmrf", "gjuchault", "socio", "octocat", "jcassidyav", "mypackage"],
+  "words": [
+    "esbuild",
+    "rmrf",
+    "gjuchault",
+    "socio",
+    "octocat",
+    "jcassidyav",
+    "mypackage",
+    "objc"
+  ],
   "flagWords": [],
   "ignorePaths": [
     "package.json",

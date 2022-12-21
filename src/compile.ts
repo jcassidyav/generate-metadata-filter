@@ -84,9 +84,6 @@ export class Scanner {
         project.getSourceFiles().forEach((sourceFile) => {
             sourceFile.getDescendants().forEach((node: Node<ts.Node>) => {
                 const symbol = node.getSymbol();
-                if (symbol?.getName() == "NSASCIIStringEncoding") {
-                    console.log("NSASCIIStringEncoding");
-                }
                 if (symbol) {
                     const decl = symbol?.getDeclarations();
                     if (decl && decl.length > 0) {
