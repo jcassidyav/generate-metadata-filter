@@ -2,6 +2,7 @@
 import { AndroidGenerator } from "./androidGenerator";
 import { Scanner } from "./compile";
 import { ConfigX } from "./config";
+import { IOSGenerator } from "./iosGenerator";
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const version = require("../package.json").version;
 
@@ -19,5 +20,7 @@ scanResult.android.forEach((value, key) => {
     console.log(key, JSON.stringify(value));
 });
 console.log("*********** END Identified Android *************");
-const generator = new AndroidGenerator(config);
-generator.generate(scanResult.android);
+//const generator = new AndroidGenerator(config);
+//generator.generate(scanResult.android);
+const generator = new IOSGenerator(config);
+generator.generate(scanResult.ios);

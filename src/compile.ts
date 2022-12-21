@@ -33,7 +33,8 @@ export class Scanner {
                 kind === ts.SyntaxKind.EnumDeclaration ||
                 kind === ts.SyntaxKind.ClassDeclaration ||
                 kind === ts.SyntaxKind.MethodDeclaration ||
-                kind === ts.SyntaxKind.PropertyDeclaration
+                kind === ts.SyntaxKind.PropertyDeclaration ||
+                (declaration.typeClassification?.isIOS && kind === ts.SyntaxKind.VariableDeclaration)
             ) {
                 if (declaration.fullName == declaration.name && declaration.ancestors?.length) {
                     symbolName = declaration.name + declaration.ancestors[0].fullName;
@@ -83,7 +84,9 @@ export class Scanner {
         project.getSourceFiles().forEach((sourceFile) => {
             sourceFile.getDescendants().forEach((node: Node<ts.Node>) => {
                 const symbol = node.getSymbol();
-
+                if (symbol?.getName() == "NSASCIIStringEncoding") {
+                    console.log("NSASCIIStringEncoding");
+                }
                 if (symbol) {
                     const decl = symbol?.getDeclarations();
                     if (decl && decl.length > 0) {
@@ -145,6 +148,8 @@ export class Scanner {
                                         }
                                     }
                                 }
+
+                                // probably need the type of the variable as well.
                             }
                         }
                     }
@@ -240,7 +245,8 @@ export class Scanner {
             kind === ts.SyntaxKind.PropertyDeclaration ||
             kind === ts.SyntaxKind.InterfaceDeclaration ||
             kind === ts.SyntaxKind.TypeAliasDeclaration ||
-            kind === ts.SyntaxKind.EnumDeclaration
+            kind === ts.SyntaxKind.EnumDeclaration ||
+            kind === ts.SyntaxKind.VariableDeclaration
         ) {
             const typeDefinition = this.isTypeDefinitionNative(filePath);
             if (typeDefinition.isNative) {
