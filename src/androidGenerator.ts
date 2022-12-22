@@ -39,7 +39,7 @@ export class AndroidGenerator {
         const outputResult = this.populateTemplate();
         const outPath = this.config.output ?? "";
         if (this.config.output) fs.mkdirSync(this.config.output, { recursive: true });
-        fs.writeFileSync(path.join(outPath, "native-api-usage.json"), JSON.stringify(outputResult, null, 5));
+        fs.writeFileSync(path.join(outPath, "android-native-api-usage.json"), JSON.stringify(outputResult, null, 5));
         // write to location
     }
 

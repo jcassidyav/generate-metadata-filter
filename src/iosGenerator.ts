@@ -16,12 +16,11 @@ export class IOSGenerator {
             console.log(entry[0]);
             const info = entry[1];
             console.log("name", info.name, "kind", info.declaration.kindName);
-
             if (
                 info.declaration.kind === ts.SyntaxKind.ClassDeclaration ||
                 info.declaration.kind === ts.SyntaxKind.EnumDeclaration ||
                 info.declaration.kind === ts.SyntaxKind.InterfaceDeclaration ||
-                info.declaration.kind === ts.SyntaxKind.VariableDeclaration
+                (info.declaration.typeClassification?.isIOS && (info.declaration.kind === ts.SyntaxKind.VariableDeclaration || info.declaration.kind === ts.SyntaxKind.FunctionDeclaration))
             ) {
                 right = info.name;
                 left = this.getModuleFromFile(info.declaration.filePath);
@@ -52,7 +51,7 @@ export class IOSGenerator {
         const outputResult = this.populateTemplate();
         const outPath = this.config.output ?? "";
         if (this.config.output) fs.mkdirSync(this.config.output, { recursive: true });
-        fs.writeFileSync(path.join(outPath, "native-api-usage.json"), JSON.stringify(outputResult, null, 5));
+        fs.writeFileSync(path.join(outPath, "ios-native-api-usage.json"), JSON.stringify(outputResult, null, 5));
         // write to location
     }
     getModuleFromFile(filePath: string | undefined): string | undefined {

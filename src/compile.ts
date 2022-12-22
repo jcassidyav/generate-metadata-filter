@@ -1,6 +1,20 @@
 import path from "path";
 import { match } from "minimatch";
-import { Project, ts, Node, TypeNode, MethodDeclaration, Symbol, ModuleDeclaration, NameableNodeSpecific, PropertyDeclaration, ClassDeclaration, ExpressionWithTypeArguments } from "ts-morph";
+import {
+    Project,
+    ts,
+    Node,
+    TypeNode,
+    MethodDeclaration,
+    Symbol,
+    ModuleDeclaration,
+    NameableNodeSpecific,
+    PropertyDeclaration,
+    ClassDeclaration,
+    ExpressionWithTypeArguments,
+    VariableDeclaration,
+    FunctionDeclaration
+} from "ts-morph";
 import { IConfig } from "./config";
 
 export class Scanner {
@@ -34,7 +48,7 @@ export class Scanner {
                 kind === ts.SyntaxKind.ClassDeclaration ||
                 kind === ts.SyntaxKind.MethodDeclaration ||
                 kind === ts.SyntaxKind.PropertyDeclaration ||
-                (declaration.typeClassification?.isIOS && kind === ts.SyntaxKind.VariableDeclaration)
+                (declaration.typeClassification?.isIOS && (kind === ts.SyntaxKind.VariableDeclaration || kind === ts.SyntaxKind.FunctionDeclaration))
             ) {
                 if (declaration.fullName == declaration.name && declaration.ancestors?.length) {
                     symbolName = declaration.name + declaration.ancestors[0].fullName;
@@ -112,10 +126,10 @@ export class Scanner {
                                     }
                                 }
 
-                                if (declInfo.kind === ts.SyntaxKind.MethodDeclaration) {
+                                if (declInfo.kind === ts.SyntaxKind.MethodDeclaration || declInfo.kind === ts.SyntaxKind.FunctionDeclaration) {
                                     for (const methodDeclarationNode of symbol.getDeclarations()) {
                                         //const methodDeclaration = symbol?.getDeclarations()[0] as MethodDeclaration;
-                                        const methodDeclaration: MethodDeclaration = methodDeclarationNode as MethodDeclaration;
+                                        const methodDeclaration: MethodDeclaration | FunctionDeclaration = methodDeclarationNode as MethodDeclaration | FunctionDeclaration;
                                         const returnTypeSymbol = methodDeclaration.getReturnType().getSymbol();
                                         const returnSymbolNode = methodDeclaration.getReturnTypeNode();
                                         const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
@@ -132,11 +146,12 @@ export class Scanner {
                                         });
                                     }
                                     // get return type
-                                } else if (declInfo.kind === ts.SyntaxKind.PropertyDeclaration) {
+                                } else if (declInfo.kind === ts.SyntaxKind.PropertyDeclaration || declInfo.kind === ts.SyntaxKind.VariableDeclaration) {
                                     for (const propertyDeclarationNode of symbol.getDeclarations()) {
-                                        const propertyDeclaration: PropertyDeclaration = propertyDeclarationNode as PropertyDeclaration;
+                                        const propertyDeclaration: PropertyDeclaration | VariableDeclaration = propertyDeclarationNode as PropertyDeclaration | VariableDeclaration;
                                         if (propertyDeclaration) {
                                             const returnTypeSymbol = propertyDeclaration.getType().getSymbol();
+                                            console.log(symbol.getName());
                                             const returnSymbolNode = propertyDeclaration.getTypeNode();
                                             const returnDecl = this.processDeclarationNodeSymbol(returnTypeSymbol, returnSymbolNode);
                                             if (returnDecl?.isInteresting) {
@@ -243,7 +258,8 @@ export class Scanner {
             kind === ts.SyntaxKind.InterfaceDeclaration ||
             kind === ts.SyntaxKind.TypeAliasDeclaration ||
             kind === ts.SyntaxKind.EnumDeclaration ||
-            kind === ts.SyntaxKind.VariableDeclaration
+            kind === ts.SyntaxKind.VariableDeclaration ||
+            kind === ts.SyntaxKind.FunctionDeclaration
         ) {
             const typeDefinition = this.isTypeDefinitionNative(filePath);
             if (typeDefinition.isNative) {
@@ -270,8 +286,16 @@ export class Scanner {
         if (!sourceNodeFilePath.includes(".d.ts")) {
             for (const declaration of symbol.getDeclarations()) {
                 const info = this.getDeclarationInfo(declaration, symbolFullName);
+
                 if (info.isInteresting) {
                     //    console.log("************" + i + " DEAL WITH MULTIPLE DECLARATIONS ******************", info.isInteresting, symbol.getFullyQualifiedName());
+
+                    if (info.kind === ts.SyntaxKind.VariableDeclaration) {
+                        if (interesting.find((decl) => decl.kind === ts.SyntaxKind.InterfaceDeclaration)) {
+                            console.log("var proceeding interface", symbol.getName());
+                            continue;
+                        }
+                    }
                     interesting.push(info);
                 }
             }

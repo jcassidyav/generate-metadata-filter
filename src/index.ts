@@ -20,7 +20,7 @@ scanResult.android.forEach((value, key) => {
     console.log(key, JSON.stringify(value));
 });
 console.log("*********** END Identified Android *************");
-//const generator = new AndroidGenerator(config);
-//generator.generate(scanResult.android);
-const generator = new IOSGenerator(config);
-generator.generate(scanResult.ios);
+const androidGenerator = new AndroidGenerator(config);
+androidGenerator.generate(scanResult.android);
+const iosGenerator = new IOSGenerator(config);
+iosGenerator.generate(scanResult.ios);
